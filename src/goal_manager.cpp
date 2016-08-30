@@ -20,11 +20,11 @@ GoalManager::GoalManager(ros::NodeHandle n)
   cancel_goal_sub_ = nh_.subscribe<std_msgs::String>(
     kCancelGoalSubName_, 1, boost::bind(&GoalManager::CancelGoalSubCbk, this, _1));
 
-  //~ ROS_INFO_STREAM("Start ActionLib");
-  //~ // Connect to the move_base action server
-  //~ action_client_ = new ActionClient(kActionLibServername_, true); // create a thread to handle subscriptions.
-  //~ action_client_->waitForServer();
-  //~ ROS_INFO("Server OK");
+  ROS_INFO_STREAM("Start ActionLib");
+  // Connect to the move_base action server
+  action_client_ = new ActionClient(kActionLibServername_, true); // create a thread to handle subscriptions.
+  action_client_->waitForServer();
+  ROS_INFO("Server OK");
 
   GoalSendingThread_.reset(
     new boost::thread(boost::bind(&GoalManager::GoalSending, this)) );
@@ -34,10 +34,12 @@ GoalManager::GoalManager(ros::NodeHandle n)
     ROS_ERROR_STREAM("get " << kGoalSequenceKey_ << " error");
     return;
   }
-  for (int i = 0; i < yml.size(); i++) {
+  // push form backward so that it can pop from the front
+  for (int i = yml.size() - 1; i >= 0; i--) {
     Point2D pose_tmp(yml[i][0], yml[i][1], yml[i][2]);
     param_goal_vector_.push_back(pose_tmp);
   }
+  cond_.notify_all();
   ROS_INFO_STREAM("Goal Manager Init...OK...");
 }
 
@@ -46,6 +48,7 @@ void GoalManager::NewGoalStampedSubCbk(const geometry_msgs::PoseStamped::ConstPt
   geometry_msgs::PoseStamped pose_tmp;
   pose_tmp.header = goal->header;
   pose_tmp.pose = goal->pose;
+  ROS_INFO_STREAM("rviz came" << goal->pose.position.x);
   mtx_.lock();
   goal_vector_.push_back(pose_tmp);
   mtx_.unlock();
@@ -95,14 +98,34 @@ void GoalManager::GoalSending() {
       ROS_INFO_STREAM("wait");
       cond_.wait(mtx_notify_);
     }
+    Point2D point_tmp;
+    move_base_msgs::MoveBaseGoal goal_tmp;
+    goal_tmp.target_pose.header.frame_id = "map";
     // set goal
+    point_tmp = param_goal_vector_.back();
+    param_goal_vector_.pop_back();
+    goal_tmp.target_pose.pose.position.x = point_tmp.x_;
+    goal_tmp.target_pose.pose.position.y = point_tmp.y_;
+    goal_tmp.target_pose.pose.orientation = tf::createQuaternionMsgFromYaw(point_tmp.th_);
+    goal_tmp.target_pose.header.stamp = ros::Time::now();
     // the piority of  goal_vector is higher than param_goal_vector
-    
+
     // send goal
-    
+    action_client_->sendGoal(goal_tmp);
+    ROS_INFO_STREAM("Sending Goal: " << point_tmp.x_ << ", " << point_tmp.y_ << ", " << point_tmp.th_);
     // wait for result
+    // It will get out the loop when not able to get a plan.
+    while (action_client_->waitForResult(ros::Duration(1, 0)) == false) {
+      if (!nh_.ok()) // exit if ros node is closed. (by pressing ctrl+c)
+        exit(0);
+    }
     // if don't cancel all the goals, the program will go to next goal after
     // reach the current goal
+    if (action_client_->getState() == actionlib::SimpleClientGoalState::SUCCEEDED) {
+      ROS_INFO("Goal Reached!!");
+    } else {
+      ROS_INFO("Goal Timout!!");
+    }
     usleep(kSleepTime_);
   }
 }
