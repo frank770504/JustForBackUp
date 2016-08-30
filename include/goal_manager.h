@@ -48,7 +48,7 @@ class GoalManager {
 
   // test
   int ind_;
-
+  bool is_doing_topic_goal;
   std::queue<geometry_msgs::PoseStamped> goal_vector_;
   std::vector<Point2D> param_goal_vector_;
   static const int kSleepTime_;
@@ -57,6 +57,7 @@ class GoalManager {
   static const std::string kCancelGoalSubName_;
   static const std::string kGoalSequenceKey_;
   static const std::string kActionLibServername_;
+  static const std::string kGoalFrameId_;
 
   boost::shared_ptr<boost::thread> GoalSendingThread_;
   boost::mutex mtx_;
