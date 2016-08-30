@@ -48,9 +48,8 @@ void GoalManager::NewGoalStampedSubCbk(const geometry_msgs::PoseStamped::ConstPt
   geometry_msgs::PoseStamped pose_tmp;
   pose_tmp.header = goal->header;
   pose_tmp.pose = goal->pose;
-  ROS_INFO_STREAM("rviz came" << goal->pose.position.x);
   mtx_.lock();
-  goal_vector_.push_back(pose_tmp);
+  goal_vector_.push(pose_tmp);
   mtx_.unlock();
   cond_.notify_all();
 }
@@ -61,7 +60,7 @@ void GoalManager::NewGoalSubCbk(const geometry_msgs::Pose::ConstPtr& goal) {
   pose_tmp.pose.position = goal->position;
   pose_tmp.pose.orientation = goal->orientation;
   mtx_.lock();
-  goal_vector_.push_back(pose_tmp);
+  goal_vector_.push(pose_tmp);
   mtx_.unlock();
   cond_.notify_all();
 }
@@ -81,8 +80,7 @@ bool GoalManager::IsGoalVectorsEmpty() {
 void GoalManager::ReleaseGoalVectors() {
     // release goal vector
     param_goal_vector_.clear();
-    goal_vector_.clear();
-    std::vector<geometry_msgs::PoseStamped>().swap(goal_vector_);
+    std::queue<geometry_msgs::PoseStamped>().swap(goal_vector_);
     std::vector<Point2D>().swap(param_goal_vector_);
 }
 
@@ -100,19 +98,34 @@ void GoalManager::GoalSending() {
     }
     Point2D point_tmp;
     move_base_msgs::MoveBaseGoal goal_tmp;
+    geometry_msgs::PoseStamped pose_tmp;
     goal_tmp.target_pose.header.frame_id = "map";
+    std::string phase;
     // set goal
-    point_tmp = param_goal_vector_.back();
-    param_goal_vector_.pop_back();
-    goal_tmp.target_pose.pose.position.x = point_tmp.x_;
-    goal_tmp.target_pose.pose.position.y = point_tmp.y_;
-    goal_tmp.target_pose.pose.orientation = tf::createQuaternionMsgFromYaw(point_tmp.th_);
-    goal_tmp.target_pose.header.stamp = ros::Time::now();
+    if ( !goal_vector_.empty() ) {
+      pose_tmp = goal_vector_.front();
+      goal_vector_.pop();
+      goal_tmp.target_pose.header = pose_tmp.header;
+      goal_tmp.target_pose.pose = pose_tmp.pose;
+      phase = "rviz";
+      // for ROS_INFO_STREAM
+      //~ point_tmp.x_ = 
+      //~ point_tmp.y_ = 
+      //~ point_tmp.th_ =
+    } else {
+      point_tmp = param_goal_vector_.back();
+      param_goal_vector_.pop_back();
+      goal_tmp.target_pose.pose.position.x = point_tmp.x_;
+      goal_tmp.target_pose.pose.position.y = point_tmp.y_;
+      goal_tmp.target_pose.pose.orientation = tf::createQuaternionMsgFromYaw(point_tmp.th_);
+      goal_tmp.target_pose.header.stamp = ros::Time::now();
+      phase = "para";
+    }
     // the piority of  goal_vector is higher than param_goal_vector
 
     // send goal
     action_client_->sendGoal(goal_tmp);
-    ROS_INFO_STREAM("Sending Goal: " << point_tmp.x_ << ", " << point_tmp.y_ << ", " << point_tmp.th_);
+    ROS_INFO_STREAM(phase <<"| Sending Goal: " << point_tmp.x_ << ", " << point_tmp.y_ << ", " << point_tmp.th_);
     // wait for result
     // It will get out the loop when not able to get a plan.
     while (action_client_->waitForResult(ros::Duration(1, 0)) == false) {

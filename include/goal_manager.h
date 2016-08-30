@@ -8,6 +8,7 @@
 #include <geometry_msgs/Pose.h>
 #include <std_msgs/String.h>
 #include <boost/thread.hpp>
+#include <queue>
 
 // maybe I have to add a namespace here
 
@@ -48,7 +49,7 @@ class GoalManager {
   // test
   int ind_;
 
-  std::vector<geometry_msgs::PoseStamped> goal_vector_;
+  std::queue<geometry_msgs::PoseStamped> goal_vector_;
   std::vector<Point2D> param_goal_vector_;
   static const int kSleepTime_;
   static const std::string kNewGoalSubName_;
