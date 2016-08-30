@@ -142,19 +142,6 @@ include_directories(
 # add_dependencies(back_and_forth ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(back_and_forth src/back_and_forth.cpp)
-add_executable(center_back_and_forth src/center_back_and_forth.cpp)
-add_executable(square src/square.cpp)
-add_executable(straight src/straight.cpp)
-add_executable(computex_demo src/computex_demo.cpp)
-add_executable(computex_demo_outside src/computex_demo_outside.cpp)
-add_executable(goal src/goal.cpp)
-add_executable(goal_square src/goal_square.cpp)
-add_executable(fac_3F src/fac_3F.cpp)
-add_executable(path_recorder src/path_recorder.cpp)
-add_executable(robot_path src/robot_path.cpp)
-add_executable(arc_path src/arc_path.cpp)
-add_executable(agv_path src/agv_path.cpp)
 add_executable(goal_manager src/goal_manager.cpp)
 
 ## Add cmake target dependencies of the executable
@@ -162,19 +149,6 @@ add_executable(goal_manager src/goal_manager.cpp)
 # add_dependencies(back_and_forth_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(back_and_forth ${catkin_LIBRARIES})
-target_link_libraries(center_back_and_forth ${catkin_LIBRARIES})
-target_link_libraries(square ${catkin_LIBRARIES})
-target_link_libraries(straight ${catkin_LIBRARIES})
-target_link_libraries(computex_demo ${catkin_LIBRARIES})
-target_link_libraries(computex_demo_outside ${catkin_LIBRARIES})
-target_link_libraries(goal ${catkin_LIBRARIES})
-target_link_libraries(goal_square ${catkin_LIBRARIES})
-target_link_libraries(fac_3F ${catkin_LIBRARIES})
-target_link_libraries(path_recorder ${catkin_LIBRARIES})
-target_link_libraries(robot_path ${catkin_LIBRARIES})
-target_link_libraries(arc_path ${catkin_LIBRARIES})
-target_link_libraries(agv_path ${catkin_LIBRARIES})
 target_link_libraries(goal_manager ${catkin_LIBRARIES})
 
 #############
