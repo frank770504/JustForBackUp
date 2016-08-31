@@ -137,7 +137,7 @@ void GoalManager::GoalSending() {
 
     // send goal
     action_client_->sendGoal(goal_tmp);
-    ROS_INFO_STREAM(phase <<"| Sending Goal: " << point_tmp.x_ << ", " << point_tmp.y_ << ", " << point_tmp.th_);
+    ROS_INFO_STREAM(phase <<"| Sending Goal: - [" << point_tmp.x_ << ", " << point_tmp.y_ << ", " << point_tmp.th_ << "]");
     // wait for result
     // It will get out the loop when not able to get a plan.
     while (action_client_->waitForResult(ros::Duration(1, 0)) == false) {
@@ -160,7 +160,7 @@ void GoalManager::ParamGoalVectorPrintTest() {
   for (int i = 0; i < param_goal_vector_.size(); i++) {
     Point2D _tmp;
     _tmp = param_goal_vector_[i];
-    ROS_INFO_STREAM("x: " << _tmp.x_ << ", y: " << _tmp.y_ << ", th: " << _tmp.th_);
+    ROS_INFO_STREAM("- [x: " << _tmp.x_ << ", y: " << _tmp.y_ << ", th: " << _tmp.th_ << "]");
   }
 }
 
